@@ -30,4 +30,4 @@ jobs:
         pip install markdown
     - name: Run application
       run: |
-        python app.py
+        timeout 10s python app.py | grep -q "Press CTRL+C to quit" && echo "Application started successfully" || (echo "Application failed to start"; exit 1)
