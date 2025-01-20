@@ -6,48 +6,8 @@
     <!-- 添加favicon -->
     <link rel="icon" href="https://www.luluvip.cn:8089/i/2024/07/29/66a75e58c08ff.png" type="image/x-icon">
 
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <style>
-        body {
-            background-image: url('https://www.luluvip.cn:8089/i/2025/01/17/678a41674df65.png');
-            background-img-repeat: repeat;
-            background-color: rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            text-align: center;
-            color:rgb(7, 104, 164) ;
-            font-size: 26px;
-            font-family: "Microsoft YaHei"
-            font-weight: normal;
-            margin-top: 10px;
-        }
-        .container {
-            margin: 0 auto;
-            margin-top: 10px;
-            width: 100%; 
-            max-width: 800px;  
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-
-        }
-        .new {
-            display: block;
-            margin: 0 auto;
-            text-align: center;
-            text-decoration: none; 
-            color: #fff;
-            border-radius: 10px 10px 0 0;
-            background-color: rgb(7, 104, 164);
-            font-size: 16px;
-            font-weight: bold;
-            width: 100%;
-            max-width: 800px;  
-            height: 40px;
-            line-height: 40px;
-        }
-        .new:hover {
-            background-color: rgb(252, 149, 38);
-        }
         ul {
             list-style: none;
             padding: 20px;
@@ -55,7 +15,7 @@
             margin: 0;
         }
         ul li {
-            line-height: 34px; // 行高
+            line-height: 34px;
         }
         ul a {
             color: rgb(7, 104, 164);
@@ -67,7 +27,6 @@
             bottom: 0;
             left: 0;
             width: 100%;
-
             height: 30px;
             line-height: 30px;
             font-size: 12px;
@@ -92,7 +51,6 @@
             margin: 0 auto;
             padding: 20px 0;
         }
-
     </style>
 </head>
 <body>

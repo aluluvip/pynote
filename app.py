@@ -21,12 +21,35 @@ if not os.path.exists(TIME_INFO_FILE):
         json.dump({}, file)
 
 def load_time_info():
-    with open(TIME_INFO_FILE, 'r', encoding='utf-8') as file:
-        return json.load(file)
+    try:
+        with open(TIME_INFO_FILE, 'r', encoding='utf-8') as file:
+            return json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
 
 def save_time_info(time_info):
-    with open(TIME_INFO_FILE, 'w', encoding='utf-8') as file:
-        json.dump(time_info, file, indent=4)
+    try:
+        with open(TIME_INFO_FILE, 'w', encoding='utf-8') as file:
+            json.dump(time_info, file, indent=4)
+    except IOError as e:
+        print(f"Error saving time info: {e}")
+
+def read_file(filepath):
+    try:
+        with open(filepath, 'r', encoding='utf-8') as file:
+            return file.read()
+    except IOError as e:
+        print(f"Error reading file {filepath}: {e}")
+        return None
+
+def write_file(filepath, content):
+    try:
+        with open(filepath, 'w', encoding='utf-8') as file:
+            file.write(content)
+        return True
+    except IOError as e:
+        print(f"Error writing to file {filepath}: {e}")
+        return False
 
 def get_article_ids():
     notes = [f for f in os.listdir(NOTES_DIR) if f.endswith('.md')]
@@ -51,15 +74,23 @@ def index():
 
 @app.route('/view/<filename>')
 def view_note(filename):
-    # 读取笔记文件内容并转换为HTML
-    with open(os.path.join(NOTES_DIR, filename), 'r', encoding='utf-8') as file:
-        content = file.read()
-        # 使用markdown库渲染Markdown内容，并启用代码块扩展
-        html_content = markdown.markdown(content, extensions=['markdown.extensions.codehilite'])
-        # 获取当前笔记的时间信息
-        time_info = load_time_info()
-        update_time = time_info.get(filename, {}).get('time', '')
-    return render_template('view_note.html', filename=filename, content=html_content, update_time=update_time)
+    # 读取笔记文件内容
+    filepath = os.path.join(NOTES_DIR, filename)
+    content = read_file(filepath)
+    if content is None:
+        return redirect(url_for('index'))
+    
+    # 使用markdown库渲染Markdown内容，并启用代码块扩展
+    html_content = markdown.markdown(content, extensions=['markdown.extensions.codehilite'])
+    
+    # 获取当前笔记的时间信息
+    time_info = load_time_info()
+    update_time = time_info.get(filename, {}).get('time', '')
+    
+    return render_template('view_note.html', 
+                         filename=filename, 
+                         content=html_content, 
+                         update_time=update_time)
 
 @app.route('/edit/<filename>', methods=['GET', 'POST'])
 def edit_note(filename):
@@ -67,7 +98,6 @@ def edit_note(filename):
         # 保存编辑后的笔记标题和内容
         new_title = request.form['title']
         content = request.form['content']
-        # 获取原始文件的完整路径
         original_file_path = os.path.join(NOTES_DIR, filename)
         
         # 检查标题是否发生了变化
@@ -77,19 +107,19 @@ def edit_note(filename):
             new_file_path = os.path.join(NOTES_DIR, new_filename)
             
             # 重命名文件
-            os.rename(original_file_path, new_file_path)
-            
-            # 更新文件名变量
-            filename = new_filename
-        else:
-            # 如果标题没有变化，使用原始文件路径
-            new_file_path = original_file_path
+            try:
+                os.rename(original_file_path, new_file_path)
+                filename = new_filename
+            except OSError as e:
+                print(f"Error renaming file: {e}")
+                return redirect(url_for('edit_note', filename=filename))
         
-        # 更新时间信息，生成新的ID并删除旧的文章信息
+        # 更新时间信息
         time_info = load_time_info()
         old_id = time_info.get(filename, {}).get('id', None)
         if filename in time_info:
             del time_info[filename]
+        
         new_id = str(uuid.uuid4())
         time_info[filename] = {
             'id': new_id,
@@ -105,22 +135,24 @@ def edit_note(filename):
                 time_info.pop(note, None)
                 save_time_info(time_info)
         
-        # 去除多余的空行
-        content = re.sub(r'\n\s*\n', '\n', content)
+        # 保存编辑后的内容
+        if not write_file(new_file_path if 'new_file_path' in locals() else original_file_path, content):
+            return redirect(url_for('edit_note', filename=filename))
         
-        # 将编辑后的内容写入文件，并更新修改时间
-        with open(new_file_path, 'w', encoding='utf-8') as file:
-            file.write(content)
-        
-        # 重定向到新生成的文章页面
         return redirect(url_for('view_note', filename=filename))
     else:
         # 读取笔记文件内容用于编辑
-        with open(os.path.join(NOTES_DIR, filename), 'r', encoding='utf-8') as file:
-            content = file.read()
-            # 提取标题
-            title = content.split('\n')[0].replace('# ', '')
-        return render_template('edit_note.html', filename=filename, content=content, title=title)
+        filepath = os.path.join(NOTES_DIR, filename)
+        content = read_file(filepath)
+        if content is None:
+            return redirect(url_for('index'))
+            
+        # 提取标题
+        title = content.split('\n')[0].replace('# ', '')
+        return render_template('edit_note.html', 
+                            filename=filename, 
+                            content=content, 
+                            title=title)
 
 @app.route('/new', methods=['GET', 'POST'])
 def new_note():
@@ -128,15 +160,21 @@ def new_note():
         # 创建新的笔记文件
         filename = request.form['filename'] + '.md'
         content = request.form['content']
+        filepath = os.path.join(NOTES_DIR, filename)
+        
+        # 检查文件是否已存在
+        if os.path.exists(filepath):
+            return render_template('new_note.html', 
+                                error="文件已存在，请使用不同的名称")
+        
         # 获取当前时间
         current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        
-        # 生成一个唯一的ID
         note_id = str(uuid.uuid4())
         
-        # 将内容写入文件
-        with open(os.path.join(NOTES_DIR, filename), 'w', encoding='utf-8') as file:
-            file.write(content)
+        # 保存文件内容
+        if not write_file(filepath, content):
+            return render_template('new_note.html', 
+                                error="保存文件时出错，请重试")
         
         # 更新时间信息
         time_info = load_time_info()
@@ -146,21 +184,27 @@ def new_note():
         }
         save_time_info(time_info)
         
-        # 重定向到新生成的文章页面
         return redirect(url_for('view_note', filename=filename))
     else:
         return render_template('new_note.html')
 
 @app.route('/delete/<filename>', methods=['POST'])
 def delete_note(filename):
+    filepath = os.path.join(NOTES_DIR, filename)
+    
     # 删除笔记文件
-    os.remove(os.path.join(NOTES_DIR, filename))
+    try:
+        os.remove(filepath)
+    except OSError as e:
+        print(f"Error deleting file {filepath}: {e}")
+        return redirect(url_for('view_note', filename=filename))
     
     # 删除时间信息
     time_info = load_time_info()
     if filename in time_info:
         del time_info[filename]
-        save_time_info(time_info)
+        if not save_time_info(time_info):
+            print(f"Error saving time info after deleting {filename}")
     
     return redirect(url_for('index'))
 

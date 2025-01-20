@@ -5,131 +5,85 @@
     <title>{{ filename }}</title>
     <link rel="icon" href="https://www.luluvip.cn:8089/i/2024/07/29/66a75e58c08ff.png" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <style>
-        /* 基本的GitHub样式 */
-        body {
+        /* Markdown 内容样式 */
+        .markdown-body {
             font-size: 16px;
             line-height: 1.5;
             color: #24292e;
-            background-color: #fff;
-            background-image: url('https://www.luluvip.cn:8089/i/2025/01/17/678a41674df65.png');
-            background-img-repeat: repeat;
-            background-color: rgba(0, 0, 0, 0.1);
         }
-        h1, h2, h3, h4, h5, h6 {
+        .markdown-body h1, 
+        .markdown-body h2, 
+        .markdown-body h3, 
+        .markdown-body h4, 
+        .markdown-body h5, 
+        .markdown-body h6 {
             margin-top: 24px;
             margin-bottom: 16px;
             font-weight: 600;
             line-height: 1.25;
         }
-        h1 {
-            text-align: center;
-            font-size: 2em;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        p {
-            margin-top: 0;
-            margin-bottom: 16px;
-        }
-        li {
-        }
-        img {
+        .markdown-body img {
             max-width: 100%;
             box-sizing: content-box;
             background-color: #fff;
         }
-        blockquote {
+        .markdown-body blockquote {
             padding: 0 1em;
             color: #6a737d;
             border-left: 0.25em solid #dfe2e5;
         }
-        blockquote > :first-child {
-            margin-top: 0;
-        }
-        blockquote > :last-child {
-            margin-bottom: 0;
-        }
-        table {
+        .markdown-body table {
             display: block;
             width: 100%;
             overflow: auto;
             border-spacing: 0;
             border-collapse: collapse;
         }
-        table th {
+        .markdown-body table th {
             font-weight: 600;
         }
-        table th, table td {
+        .markdown-body table th, 
+        .markdown-body table td {
             padding: 6px 13px;
             border: 1px solid #dfe2e5;
         }
-        table tr {
+        .markdown-body table tr {
             background-color: #fff;
             border-top: 1px solid #c6cbd1;
         }
-        table tr:nth-child(2n) {
+        .markdown-body table tr:nth-child(2n) {
             background-color: #f6f8fa;
         }
-        a {
+        .markdown-body a {
             color: #0366d6;
             text-decoration: none;
         }
-        ul {
-            list-style: none;
-            margin: 0;
-            padding: 0;
+        .markdown-body ul {
+            list-style: disc;
+            margin: 0 0 16px 0;
+            padding-left: 2em;
         }
-        button {
-            font-size: 12px;
-            padding: 4px 8px 6px 8px;
-            background-color:rgb(178, 33, 33);
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            height: 40px;
-            width: 100px;
+        .markdown-body li {
+            margin-bottom: 0.25em;
         }
-        button:hover {
-            background-color: rgb(138, 23, 23);
-        }
-        .container {
-            margin: 0 auto;
-            width: 100%; 
-            max-width: 800px;  
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 0 0 10px 10px;
-        }
-        form {
-            text-align: center;
-            margin-top: 10px;
-        }
-        hr {
+        .markdown-body hr {
             border: none;
             border-top: 1px solid #f4f4f4;
             margin: 20px 0;
         }
-        .anniu {
-            display: block;
-            font-size: 16px;
-            background-color:rgb(159, 27, 27);
-            margin: 0 auto;
-            margin-top: 20px;
-            padding: 0 20px;
-            width: 100%; 
-            max-width: 800px;  
-            background-color: rgb(7, 104, 164);
-            border-radius: 10px 10px 0 0;
-            height: 40px;
-            line-height: 40px;
-            color: #fff;
-            text-decoration: none;
-            text-align: center;
+        
+        /* 保留代码块换行 */
+        .markdown-body pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
-        .anniu:hover {
-            background-color: rgb(252, 149, 38);
+        
+        /* 自定义样式 */
+        form {
+            text-align: center;
+            margin-top: 10px;
         }
         p.dibu {
             bottom: 0;
@@ -154,6 +108,12 @@
 <body>
     <a class="anniu" href="{{ url_for('index') }}" > <<返回首页 </a>
     <div class="container">
+        {% if error %}
+        <div class="error-message" style="color: red; margin-bottom: 20px;">
+            {{ error }}
+        </div>
+        {% endif %}
+        
         <!---文章标题 -->
         <h1>{{ filename.split('.')[0] }}</h1>
         
@@ -161,18 +121,16 @@
          <ul style="text-align:center;margin-bottom:20px">
             <li>
                 <span style="font-size: 12px; color:rgba(2, 50, 80 ,0.3); text-align:center">更新于： {{ update_time }} </span>&nbsp;
-                <a class="bianji" href="{{ url_for('edit_note', filename=filename) }}">编辑</a>
+                <a class="bianji" href="{{ url_for('edit_note', filename=filename) }}">编辑</a>&nbsp;
+                <form action="{{ url_for('delete_note', filename=filename) }}" method="post" style="display: inline;">
+                    <button type="submit" style="background: none; border: none; color: rgb(41, 153, 223); font-size: 12px; cursor: pointer;">删除</button>
+                </form>
             </li>
         </ul>
         
         <!---渲染markdown的内容 -->
         <div class="markdown-body">{{ content | safe }}</div>
     </div>
-
-    <!---删除文章按钮 -->   
-    <form action="{{ url_for('delete_note', filename=filename) }}" method="post">
-        <button type="submit">删除文章</button>
-    </form>
 
     <p class="dibu">
         Copyright ©2025 power by luluvip
