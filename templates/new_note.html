@@ -61,6 +61,15 @@
         <form method="post">
             文章名称：<br><br> <input type="text" name="filename" required placeholder="请输入文章名称（必填）"><br><br>
 
+            文章分类：<br><br>
+            <select name="category" style="width: 100%; padding: 10px; margin-bottom: 10px;">
+                <option value="未分类">未分类</option>
+                <option value="技术">技术</option>
+                <option value="生活">生活</option>
+                <option value="工作">工作</option>
+                <option value="学习">学习</option>
+            </select><br><br>
+
             文章内容：<br><br>
             <textarea name="content" rows="20" cols="80" placeholder="请输入文章内容..."></textarea><br><br>
 

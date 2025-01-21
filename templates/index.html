@@ -16,11 +16,40 @@
         }
         ul li {
             line-height: 34px;
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+        }
+        .note-info {
+            display: flex;
+            align-items: center;
+            margin-left: auto;
         }
         ul a {
             color: rgb(7, 104, 164);
             text-decoration: none;
             font-size: 16px;
+        }
+        .category-filter {
+            margin: 15px 0;
+        }
+        .category-filter select {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .category-tag {
+            background: #f0f0f0;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin: 0 10px;
+        }
+        .time {
+            font-size: 14px;
+            color: #999;
+            min-width: 140px;
+            text-align: right;
         }
         dibu {
             position: fixed;
@@ -32,10 +61,6 @@
             font-size: 12px;
             text-align: center;
             color:rgba(2, 50, 80 ,0.3);
-        }
-        span {
-            font-size: 14px;
-            color: #999;
         }
         .xiaozi {
             font-size: 12px;
@@ -60,13 +85,44 @@
     <br>
     
     <div class="container">
-        <a class= "new" href="{{ url_for('new_note') }}"> + 新建笔记 </a>
+        <a class="new" href="{{ url_for('new_note') }}"> + 新建笔记 </a>
+        
+        <!-- 分类筛选器 -->
+        <div class="category-filter">
+            <select onchange="filterByCategory(this.value)">
+                <option value="">所有分类</option>
+                {% for category in categories %}
+                    <option value="{{ category }}">{{ category }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
         <ul>
-            {% for note, title, time in notes %}
-                <li><a href="{{ url_for('view_note', filename=note) }}">📝 {{ title }}</a> <span style="float: right;">⏱ {{ time }}</span></li>
+            {% for note, title, time, category in notes %}
+                <li class="note-item" data-category="{{ category }}">
+                    <a href="{{ url_for('view_note', filename=note) }}">📝 {{ title }}</a>
+                    <div class="note-info">
+                        <span class="category-tag">{{ category }}</span>
+                        <span class="time">⏱ {{ time }}</span>
+                    </div>
+                </li>
             {% endfor %}
         </ul>
     </div>
+
+    <script>
+        function filterByCategory(category) {
+            const notes = document.querySelectorAll('.note-item');
+            notes.forEach(note => {
+                if (!category || note.dataset.category === category) {
+                    note.style.display = 'flex';
+                } else {
+                    note.style.display = 'none';
+                }
+            });
+        }
+    </script>
+
     <dibu>
         Copyright ©2025 power by luluvip
     </dibu>

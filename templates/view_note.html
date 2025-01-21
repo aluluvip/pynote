@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -106,24 +107,26 @@
     </style>
 </head>
 <body>
-    <a class="anniu" href="{{ url_for('index') }}" > <<返回首页 </a>
+    
     <div class="container">
         {% if error %}
         <div class="error-message" style="color: red; margin-bottom: 20px;">
             {{ error }}
         </div>
         {% endif %}
+
+        <a class="anniu" href="{{ url_for('index') }}" > <<返回首页 </a>
         
         <!---文章标题 -->
         <h1>{{ filename.split('.')[0] }}</h1>
         
         <!-- 在文章标题下方展示更新时间 -->
          <ul style="text-align:center;margin-bottom:20px">
-            <li>
-                <span style="font-size: 12px; color:rgba(2, 50, 80 ,0.3); text-align:center">更新于： {{ update_time }} </span>&nbsp;
-                <a class="bianji" href="{{ url_for('edit_note', filename=filename) }}">编辑</a>&nbsp;
+            <li style="list-style: none;">
+                <span style="font-size: 12px; color:rgba(2, 50, 80 ,0.3); text-align:center">更新于： {{ update_time }} </span>
+                <a class="bianji" href="{{ url_for('edit_note', filename=filename) }}">编辑</a>
                 <form action="{{ url_for('delete_note', filename=filename) }}" method="post" style="display: inline;">
-                    <button type="submit" style="background: none; border: none; color: rgb(41, 153, 223); font-size: 12px; cursor: pointer;">删除</button>
+                    <button type="submit" style="background: none; border: none; color: rgb(245, 89, 84); font-size: 12px; cursor: pointer;">删除</button>
                 </form>
             </li>
         </ul>

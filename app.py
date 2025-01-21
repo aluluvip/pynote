@@ -23,7 +23,12 @@ if not os.path.exists(TIME_INFO_FILE):
 def load_time_info():
     try:
         with open(TIME_INFO_FILE, 'r', encoding='utf-8') as file:
-            return json.load(file)
+            data = json.load(file)
+            # 确保每个笔记都有分类字段
+            for note in data:
+                if 'category' not in data[note]:
+                    data[note]['category'] = '未分类'
+            return data
     except (FileNotFoundError, json.JSONDecodeError):
         return {}
 
@@ -59,18 +64,23 @@ def get_article_ids():
 def index():
     # 获取所有笔记文件
     notes = [f for f in os.listdir(NOTES_DIR) if f.endswith('.md')]
-    # 提取每个文件的标题和时间
+    # 提取每个文件的标题、时间和分类
     note_titles = []
     time_info = load_time_info()
     for note in notes:
         # 使用文件名作为标题
         title = note.replace('.md', '')
-        # 获取时间信息
+        # 获取时间信息和分类
         time_str = time_info.get(note, {}).get('time', '')
-        note_titles.append((note, title, time_str))
+        category = time_info.get(note, {}).get('category', '未分类')
+        note_titles.append((note, title, time_str, category))
     # 按时间倒序排列
     note_titles.sort(key=lambda x: x[2], reverse=True)
-    return render_template('index.html', notes=note_titles)
+    
+    # 获取所有分类
+    categories = sorted(set([note[3] for note in note_titles]))
+    
+    return render_template('index.html', notes=note_titles, categories=categories)
 
 @app.route('/view/<filename>')
 def view_note(filename):
@@ -95,9 +105,10 @@ def view_note(filename):
 @app.route('/edit/<filename>', methods=['GET', 'POST'])
 def edit_note(filename):
     if request.method == 'POST':
-        # 保存编辑后的笔记标题和内容
+        # 保存编辑后的笔记标题、内容和分类
         new_title = request.form['title']
         content = request.form['content']
+        category = request.form.get('category', '未分类')
         original_file_path = os.path.join(NOTES_DIR, filename)
         
         # 检查标题是否发生了变化
@@ -116,24 +127,31 @@ def edit_note(filename):
         
         # 更新时间信息
         time_info = load_time_info()
-        old_id = time_info.get(filename, {}).get('id', None)
-        if filename in time_info:
-            del time_info[filename]
         
-        new_id = str(uuid.uuid4())
-        time_info[filename] = {
-            'id': new_id,
-            'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        }
+        # 获取旧记录
+        old_record = time_info.get(filename, {})
+        old_id = old_record.get('id', str(uuid.uuid4()))
+        
+        # 如果文件名发生变化
+        if new_title != filename.replace('.md', ''):
+            # 删除旧记录
+            if filename in time_info:
+                del time_info[filename]
+            
+            # 创建新记录
+            time_info[new_filename] = {
+                'id': old_id,
+                'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'category': category
+            }
+        else:
+            # 更新现有记录
+            time_info[filename] = {
+                'id': old_id,
+                'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'category': category
+            }
         save_time_info(time_info)
-        
-        # 删除旧的ID对应的文章信息
-        if old_id is not None:
-            article_ids = get_article_ids()
-            note = next((n for n, id in article_ids.items() if id == old_id), None)
-            if note:
-                time_info.pop(note, None)
-                save_time_info(time_info)
         
         # 保存编辑后的内容
         if not write_file(new_file_path if 'new_file_path' in locals() else original_file_path, content):
@@ -149,10 +167,12 @@ def edit_note(filename):
             
         # 提取标题
         title = content.split('\n')[0].replace('# ', '')
+        time_info = load_time_info()
         return render_template('edit_note.html', 
                             filename=filename, 
                             content=content, 
-                            title=title)
+                            title=title,
+                            time_info=time_info)
 
 @app.route('/new', methods=['GET', 'POST'])
 def new_note():
@@ -160,6 +180,7 @@ def new_note():
         # 创建新的笔记文件
         filename = request.form['filename'] + '.md'
         content = request.form['content']
+        category = request.form.get('category', '未分类')
         filepath = os.path.join(NOTES_DIR, filename)
         
         # 检查文件是否已存在
@@ -180,7 +201,8 @@ def new_note():
         time_info = load_time_info()
         time_info[filename] = {
             'id': note_id,
-            'time': current_time
+            'time': current_time,
+            'category': category
         }
         save_time_info(time_info)
         

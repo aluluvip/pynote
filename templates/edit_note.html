@@ -60,6 +60,16 @@
         
         <form method="post">
             文章名称<br><br> <input type="text" name="title" value="{{ filename.split('.')[0] }}" required placeholder="请输入文章名称（必填）"><br><br>
+            
+            文章分类：<br><br>
+            <select name="category" style="width: 100%; padding: 10px; margin-bottom: 10px;">
+                <option value="未分类" {% if time_info.get(filename, {}).get('category', '未分类') == '未分类' %}selected{% endif %}>未分类</option>
+                <option value="技术" {% if time_info.get(filename, {}).get('category', '未分类') == '技术' %}selected{% endif %}>技术</option>
+                <option value="生活" {% if time_info.get(filename, {}).get('category', '未分类') == '生活' %}selected{% endif %}>生活</option>
+                <option value="工作" {% if time_info.get(filename, {}).get('category', '未分类') == '工作' %}selected{% endif %}>工作</option>
+                <option value="学习" {% if time_info.get(filename, {}).get('category', '未分类') == '学习' %}selected{% endif %}>学习</option>
+            </select><br><br>
+
             文章内容<br><br><textarea name="content" rows="20" cols="80" placeholder="请输入文章内容...">{{ content }}</textarea><br><br>
             <div style="text-align:center">
             <input type="submit" value="保存">
